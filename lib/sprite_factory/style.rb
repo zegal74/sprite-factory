@@ -7,7 +7,12 @@ module SpriteFactory
       "#{selector}#{name} { #{css_style(attributes)}; }"
     end
 
-    def self.css_style(attributes)
+    def self.css_header(selector, attributers)
+      "[class^='#{selector}''], [class*=' #{selector}'] { #{css_style(attributes)}; }"
+    end
+
+    def self.css_style(attributes, cr = false)
+      separator = cr ? ";\n": ";"
       attributes.join("; ")
     end
 
@@ -20,6 +25,10 @@ module SpriteFactory
     def self.scss(selector, name, attributes)
       css(selector, name, attributes) # scss is a superset of css, but we dont actually need any of the extra bits, so just defer to the css generator instead
     end
+
+    def self.scss_header(selector, attributers)
+      css(selector, attributers)
+    end    
 
     def self.scss_style(attributes)
       css_style(attributes)
@@ -47,11 +56,23 @@ module SpriteFactory
 
     def self.generate(style_name, selector, path, images)
       styles = []
+
+      attrs = [
+        "display: inline-block",
+        "vertical-align: text-top",
+        "background-image: url('#{path}')",
+        "background-repeat: no-repeat"
+      ]
+
+      styles << send("#{style_name}_header", attrs)
+      styles << "\n"
+
       images.each do |image|
         attr = [
           "width: #{image[:cssw]}px",
           "height: #{image[:cssh]}px",
-          "background: url(#{path}) #{-image[:cssx]}px #{-image[:cssy]}px no-repeat"
+          #"background: url(#{path}) #{-image[:cssx]}px #{-image[:cssy]}px no-repeat"
+          "background-position: #{-image[:cssx]}px #{-image[:cssy]}px"
         ]
         image[:path] = path
         image[:selector] = selector
